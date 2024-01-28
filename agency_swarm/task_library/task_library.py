@@ -106,3 +106,22 @@ class TaskLibrary:
                 return task
 
         return None
+
+    def delete_task(self, task):
+        """
+        Delete a task from the library.
+
+        :param task: Task, the task instance to be deleted.
+        """
+        with self.Session() as session:
+            # Query for the task in the database by its ID
+            task_to_delete = session.query(Task).filter_by(task_id=task.task_id).first()
+            
+            # If the task is found, delete it
+            if task_to_delete:
+                session.delete(task_to_delete)
+                session.commit()
+                print(f"Task ID {task.task_id} deleted.")
+            else:
+                print(f"Task ID {task.task_id} not found in the library.")
+
