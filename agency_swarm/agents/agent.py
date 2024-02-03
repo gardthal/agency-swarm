@@ -27,27 +27,37 @@ class Agent():
     def functions(self):
         return [tool for tool in self.tools if issubclass(tool, BaseTool)]
 
-    def __init__(self, id: str = None, name: str = None, description: str = None, instructions: str = "",
-                 tools: List[Union[Type[BaseTool], Type[Retrieval], Type[CodeInterpreter]]] = None,
-                 files_folder: Union[List[str], str] = None, schemas_folder: Union[List[str], str] = None,
-                 api_headers: Dict[str, Dict[str, str]] = None, api_params: Dict[str, Dict[str, str]] = None,
-                 file_ids: List[str] = None, metadata: Dict[str, str] = None, model: str = "gpt-4-1106-preview"):
+    def __init__(
+            self,
+            id: str = None,
+            name: str = None,
+            description: str = None,
+            instructions: str = "",
+            tools: List[Union[Type[BaseTool], Type[Retrieval], Type[CodeInterpreter]]] = None,
+            files_folder: Union[List[str], str] = None,
+            schemas_folder: Union[List[str], str] = None,
+            api_headers: Dict[str, Dict[str, str]] = None,
+            api_params: Dict[str, Dict[str, str]] = None,
+            file_ids: List[str] = None,
+            metadata: Dict[str, str] = None,
+            model: str = "gpt-4-turbo-preview"
+    ):
         """
         Initializes an Agent with specified attributes, tools, and OpenAI client.
 
         Parameters:
-        id (str, optional): Loads the assistant from OpenAI assistant ID. Assistant will be created or loaded from settings if ID is not provided. Defaults to None.
-        name (str, optional): Name of the agent. Defaults to the class name if not provided.
-        description (str, optional): A brief description of the agent's purpose. Defaults to None.
-        instructions (str, optional): Path to a file containing specific instructions for the agent. Defaults to an empty string.
-        tools (List[Union[Type[BaseTool], Type[Retrieval], Type[CodeInterpreter]]], optional): A list of tools (as classes) that the agent can use. Defaults to an empty list.
-        files_folder (Union[List[str], str], optional): Path or list of paths to directories containing files associated with the agent. Defaults to None.
-        schemas_folder (Union[List[str], str], optional): Path or list of paths to directories containing OpenAPI schemas associated with the agent. Defaults to None.
-        api_headers (Dict[str,Dict[str, str]], optional): Headers to be used for the openapi requests. Each key must be a full filename from schemas_folder. Defaults to an empty dictionary.
-        api_params (Dict[str, Dict[str, str]], optional): Extra params to be used for the openapi requests. Each key must be a full filename from schemas_folder. Defaults to an empty dictionary.
-        file_ids (List[str], optional): List of file IDs for files associated with the agent. Defaults to an empty list.
-        metadata (Dict[str, str], optional): Metadata associated with the agent. Defaults to an empty dictionary.
-        model (str, optional): The model identifier for the OpenAI API. Defaults to "gpt-4-1106-preview".
+            id (str, optional): Loads the assistant from OpenAI assistant ID. Assistant will be created or loaded from settings if ID is not provided. Defaults to None.
+            name (str, optional): Name of the agent. Defaults to the class name if not provided.
+            description (str, optional): A brief description of the agent's purpose. Defaults to None.
+            instructions (str, optional): Path to a file containing specific instructions for the agent. Defaults to an empty string.
+            tools (List[Union[Type[BaseTool], Type[Retrieval], Type[CodeInterpreter]]], optional): A list of tools (as classes) that the agent can use. Defaults to an empty list.
+            files_folder (Union[List[str], str], optional): Path or list of paths to directories containing files associated with the agent. Defaults to None.
+            schemas_folder (Union[List[str], str], optional): Path or list of paths to directories containing OpenAPI schemas associated with the agent. Defaults to None.
+            api_headers (Dict[str,Dict[str, str]], optional): Headers to be used for the openapi requests. Each key must be a full filename from schemas_folder. Defaults to an empty dictionary.
+            api_params (Dict[str, Dict[str, str]], optional): Extra params to be used for the openapi requests. Each key must be a full filename from schemas_folder. Defaults to an empty dictionary.
+            file_ids (List[str], optional): List of file IDs for files associated with the agent. Defaults to an empty list.
+            metadata (Dict[str, str], optional): Metadata associated with the agent. Defaults to an empty dictionary.
+            model (str, optional): The model identifier for the OpenAI API. Defaults to "gpt-4-turbo-preview".
 
         This constructor sets up the agent with its unique properties, initializes the OpenAI client, reads instructions if provided, and uploads any associated files.
         """
@@ -65,6 +75,8 @@ class Agent():
         self.file_ids = file_ids if file_ids else []
         self.metadata = metadata if metadata else {}
         self.model = model
+
+        self.settings_path = './settings.json'
 
         # private attributes
         self._assistant: Any = None
@@ -85,7 +97,7 @@ class Agent():
         This method handles the initialization and potential updates of the agent's OpenAI assistant. It loads the assistant based on a saved ID, updates the assistant if necessary, or creates a new assistant if it doesn't exist. After initialization or update, it saves the assistant's settings.
 
         Output:
-        self: Returns the agent instance for chaining methods or further processing.
+            self: Returns the agent instance for chaining methods or further processing.
         """
 
         # check if settings.json exists
@@ -197,6 +209,7 @@ class Agent():
 
                 if not os.path.isdir(f_path):
                     f_path = os.path.join(self.get_class_folder_path(), files_folder)
+                    f_path = os.path.normpath(f_path)
 
                 if os.path.isdir(f_path):
                     f_paths = os.listdir(f_path)
@@ -220,7 +233,7 @@ class Agent():
                                 f.close()
                             add_id_to_file(f_path, file_id)
                 else:
-                    raise Exception("Files folder path is not a directory.")
+                    raise Exception("Files folder path is not a directory.", f_path)
             else:
                 raise Exception("Files folder path must be a string or list of strings.")
 
@@ -281,6 +294,7 @@ class Agent():
 
                 if not os.path.isdir(f_path):
                     f_path = os.path.join(self.get_class_folder_path(), schemas_folder)
+                    f_path = os.path.normpath(f_path)
 
                 if os.path.isdir(f_path):
                     f_paths = os.listdir(f_path)
@@ -391,10 +405,10 @@ class Agent():
         Checks if the agent's parameters match with the given assistant settings.
 
         Parameters:
-        assistant_settings (dict): A dictionary containing the settings of an assistant.
+            assistant_settings (dict): A dictionary containing the settings of an assistant.
 
         Returns:
-        bool: True if all the agent's parameters match the assistant settings, False otherwise.
+            bool: True if all the agent's parameters match the assistant settings, False otherwise.
 
         This method compares the current agent's parameters such as name, description, instructions, tools, file IDs, metadata, and model with the given assistant settings. It uses DeepDiff to compare complex structures like tools and metadata. If any parameter does not match, it returns False; otherwise, it returns True.
         """
@@ -448,18 +462,28 @@ class Agent():
     # --- Helper Methods ---
 
     def get_settings_path(self):
-        return os.path.join("./", 'settings.json')
+        return self.settings_path
 
     def _read_instructions(self):
-        if os.path.isfile(self.instructions):
+        class_instructions_path = os.path.normpath(os.path.join(self.get_class_folder_path(), self.instructions))
+        if os.path.isfile(class_instructions_path):
+            with open(class_instructions_path, 'r') as f:
+                self.instructions = f.read()
+        elif os.path.isfile(self.instructions):
             with open(self.instructions, 'r') as f:
                 self.instructions = f.read()
-        elif os.path.isfile(os.path.join(self.get_class_folder_path(), self.instructions)):
-            with open(os.path.join(self.get_class_folder_path(), self.instructions), 'r') as f:
-                self.instructions = f.read()
+        elif "./instructions.md" in self.instructions or "./instructions.txt" in self.instructions:
+            raise Exception("Instructions file not found.")
+
 
     def get_class_folder_path(self):
-        return os.path.abspath(os.path.dirname(inspect.getfile(self.__class__)))
+        try:
+            # First, try to use the __file__ attribute of the module
+            return os.path.abspath(os.path.dirname(self.__module__.__file__))
+        except AttributeError:
+            # If that fails, fall back to inspect
+            class_file = inspect.getfile(self.__class__)
+            return os.path.abspath(os.path.realpath(os.path.dirname(class_file)))
 
     def add_shared_instructions(self, instructions: str):
         if self._shared_instructions is None:
