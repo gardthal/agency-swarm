@@ -1,4 +1,3 @@
-# node.py
 import threading
 import uuid
 from typing import Callable, Any
