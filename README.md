@@ -10,6 +10,7 @@ Agency Swarm is an open-source agent orchestration framework designed to automat
 [![Subscribe on YouTube](https://img.shields.io/youtube/channel/subscribers/UCSv4qL8vmoSH7GaPjuqRiCQ
 )](https://youtube.com/@vrsen/)
 [![Follow on Twitter](https://img.shields.io/twitter/follow/__vrsen__.svg?style=social&label=Follow%20%40__vrsen__)](https://twitter.com/__vrsen__)
+[![Join our Discord!](https://img.shields.io/discord/1200037936352202802?label=Discord)](https://discord.gg/cw2xBaWfFM)
 
 ## Key Features
 
@@ -166,7 +167,19 @@ Get completion from the agency:
 completion_output = agency.get_completion("Please create a new website for our client.", yield_messages=False)
 ```
 
-## Creating Agent Templates Locally (CLI)
+# CLI
+
+## Genesis Agency
+
+The `genesis` command starts the genesis agency in your terminal to help you create new agencies and agents.
+
+#### **Command Syntax:**
+
+```bash
+agency-swarm genesis [--openai_key "YOUR_API_KEY"]
+```
+
+## Creating Agent Templates Locally
 
 This CLI command simplifies the process of creating a structured environment for each agent.
 
@@ -187,6 +200,7 @@ When you run the `create-agent-template` command, it creates the following folde
 └── AgentName/                  # Directory for the specific agent
     ├── files/                  # Directory for files that will be uploaded to openai
     ├── schemas/                # Directory for OpenAPI schemas to be converted into tools
+    ├── tools/                  # Directory for tools to be imported by default. 
     ├── AgentName.py            # The main agent class file
     ├── __init__.py             # Initializes the agent folder as a Python package
     ├── instructions.md or .txt # Instruction document for the agent
@@ -199,7 +213,7 @@ This structure ensures that each agent has its dedicated space with all necessar
 ## Future Enhancements
 
 1. [x] Creation of agencies that can autonomously create other agencies.
-2. [ ] Asynchronous communication and task handling.
+2. [x] Asynchronous communication and task handling.
 3. [ ] Inter-agency communication for a self-expanding system.
 
 ## Contributing
