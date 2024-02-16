@@ -4,39 +4,40 @@ from agency import Agency
 import time
 
 class AgencyNode(Node):
+    """
+    A class representing an agency node, inheriting from the base Node class.
+    This class is responsible for managing tasks and executing them within an agency context.
+    """
+
     def __init__(self, agency: Agency, custom_tools=None):
+        """
+        Initialize a new AgencyNode instance.
+
+        :param agency: Agency, the agency associated with this node.
+        :param custom_tools: List, optional custom tools to be added to the agency's CEO.
+        """
         self.agency = agency
         self.task_library = TaskLibrary()
 
         if custom_tools is not None:
-            self.add_custom_tools_to_ceo(custom_tools)
+            self._add_custom_tools_to_ceo(custom_tools)
 
-        # Subscribe to topics of interest here
-        self.subscribe("task_updates", self.handle_task_update)
-
-    def run(self):
+    def _run(self):
         """
         Main loop where the AgencyNode checks for new tasks and executes them.
         """
         while self._running:
             next_task = self.task_library.next_task()
             if next_task:
-                self.execute_task(next_task)
-        else:
-            time.sleep(1)
+                self._execute_task(next_task)
+            else:
+                time.sleep(1)
 
-    def handle_task_update(self, message):
-        """
-        Handle messages received on the 'task_updates' topic.
-        This method will be called whenever a message is published to 'task_updates'.
-        """
-        print(f"AgencyNode {self._id} received a task update: {message}")
-        # Process the task update message here
-        # Example: Update task status in the task library or initiate a new task
-
-    def execute_task(self, task: Task):
+    def _execute_task(self, task: Task):
         """
         Execute the given task and update its state in the task library.
+
+        :param task: Task, the task to be executed.
         """
         # Example task execution logic
         print(f"Executing task {task.task_id}")
@@ -46,19 +47,26 @@ class AgencyNode(Node):
         # Complete Task
         self.agency.get_completion(task.format_for_ai())
 
-        #Check Task State
+        # Check Task State
         if task.state == States.IN_PROGRESS:
             self.agency.get_completion("Please change the state of the task based on your execution success")
 
             if task.state == States.IN_PROGRESS:
                 task.state = States.ERROR
 
-    def add_custom_tools_to_ceo(self, custom_tools):
+    def _add_custom_tools_to_ceo(self, custom_tools):
         """
         Add custom tools to the agency's CEO.
+
+        :param custom_tools: List, custom tools to be added.
         """
         for tool in custom_tools:
             self.agency.ceo.add_tool(tool)
 
     def __repr__(self):
+        """
+        Return a string representation of the AgencyNode instance.
+
+        :return: String representation.
+        """
         return f"<AgencyNode id={self._id}>"

@@ -11,7 +11,7 @@ class TaskLibrary:
         """
         Initialize a new TaskLibrary instance.
 
-        :param db_url: String, the database URL for SQLAlchemy to connect to.
+        :param db_url: str, the database URL for SQLAlchemy to connect to.
         """
         self.engine = create_engine(db_url)
         Base.metadata.create_all(self.engine)
@@ -39,8 +39,7 @@ class TaskLibrary:
                 print(f"  Tags: {', '.join(task.tags) if task.tags else 'None'}")
                 print(f"  Thread ID: {task.thread_id or 'None'}")
 
-                
-    def add_task(self, task):
+    def add_task(self, task: Task):
         """
         Add a new task to the library or update an existing one.
 
@@ -49,25 +48,22 @@ class TaskLibrary:
         with self.Session() as session:
             # Merge the task with the session
             task = session.merge(task)
-            
+
             # Commit the changes to the database
             session.commit()
-
 
     def query_tasks(self, filters=None, order_by=None, limit=None):
         """
         Query tasks from the library based on provided filters, order, and limit.
 
-        :param filters: Dictionary, criteria for filtering tasks. Each key is an attribute name,
-                        and the value can be a single value or a list of values. If a list is
-                        provided, tasks matching any of the values in the list will be included.
-        :param order_by: String/List, attribute(s) to order the tasks by.
-        :param limit: Integer, limit the number of tasks returned.
-        :return: List of Task instances that match the query.
+        :param filters: dict, criteria for filtering tasks.
+        :param order_by: str/list, attribute(s) to order the tasks by.
+        :param limit: int, limit the number of tasks returned.
+        :return: list of Task instances that match the query.
         """
         with self.Session() as session:
             query = session.query(Task).options(joinedload('*'))
-            
+
             if filters:
                 filter_conditions = []
                 for key, value in filters.items():
@@ -79,7 +75,7 @@ class TaskLibrary:
                         filter_conditions.append(getattr(Task, key).in_(value))
                     else:
                         filter_conditions.append(getattr(Task, key) == value)
-                
+
                 query = query.filter(*filter_conditions)
 
             if order_by:
@@ -93,7 +89,12 @@ class TaskLibrary:
 
             return query.all()
 
-    def next_task(self):
+    def next_task(self) -> Task:
+        """
+        Retrieve the next available task from the task library.
+
+        :return: Task instance or None if no task is available.
+        """
         with self.Session() as session:
             task = session.query(Task) \
                           .filter(Task.state.in_([States.AVAILABLE])) \
@@ -107,7 +108,7 @@ class TaskLibrary:
 
         return None
 
-    def delete_task(self, task):
+    def delete_task(self, task: Task):
         """
         Delete a task from the library.
 
@@ -116,7 +117,7 @@ class TaskLibrary:
         with self.Session() as session:
             # Query for the task in the database by its ID
             task_to_delete = session.query(Task).filter_by(task_id=task.task_id).first()
-            
+
             # If the task is found, delete it
             if task_to_delete:
                 session.delete(task_to_delete)
@@ -124,4 +125,3 @@ class TaskLibrary:
                 print(f"Task ID {task.task_id} deleted.")
             else:
                 print(f"Task ID {task.task_id} not found in the library.")
-

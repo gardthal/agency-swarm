@@ -1,10 +1,14 @@
 from sqlalchemy import Column, Integer, String, Enum, JSON
 from sqlalchemy.ext.declarative import declarative_base
 from enum import Enum as PyEnum
+from typing import List
 
 Base = declarative_base()
 
 class States(PyEnum):
+    """
+    Enum representing the possible states of a task.
+    """
     IN_PROGRESS = "In progress"
     AVAILABLE = "Available"
     COMPLETE = "Complete"
@@ -13,6 +17,10 @@ class States(PyEnum):
     ERROR = "Error"
 
 class Task(Base):
+    """
+    Represents a task in the task library.
+    """
+
     __tablename__ = 'task_library'
 
     task_id = Column(Integer, primary_key=True)  # Primary key
@@ -24,16 +32,17 @@ class Task(Base):
     tags = Column(JSON)  # Storing tags as JSON
     thread_id = Column(String)
 
-    def __init__(self, description, priority, thread_id=None, assigned_agent=None, files=None, tags=None, state=States.AVAILABLE):
+    def __init__(self, description: str, priority: int, thread_id: str = None, assigned_agent: str = None,
+                 files: List[str] = None, tags: List[str] = None, state: States = States.AVAILABLE):
         """
         Initialize a new Task instance.
 
-        :param description: String, description of the task
-        :param priority: Integer, priority of the task
-        :param thread_id: String, ID of the associated thread (optional)
-        :param assigned_agent: String, agent assigned to the task (optional)
-        :param files: List, list of files associated with the task (optional)
-        :param tags: List, list of tags associated with the task (optional)
+        :param description: str, description of the task
+        :param priority: int, priority of the task
+        :param thread_id: str, ID of the associated thread (optional)
+        :param assigned_agent: str, agent assigned to the task (optional)
+        :param files: List[str], list of files associated with the task (optional)
+        :param tags: List[str], list of tags associated with the task (optional)
         :param state: States, state of the task (default: AVAILABLE)
         :raises ValueError: If priority is not a positive integer
         :raises TypeError: If files or tags are not lists
@@ -55,11 +64,11 @@ class Task(Base):
         self.tags = tags or []
         self.state = state if isinstance(state, States) else States.AVAILABLE
 
-    def format_for_ai(self):
+    def format_for_ai(self) -> str:
         """
         Format the task information into a string suitable for an AI prompt.
 
-        :return: String formatted for AI prompt
+        :return: str, formatted string for AI prompt
         """
         prompt_parts = [
             f"Task ID: {self.task_id}",
