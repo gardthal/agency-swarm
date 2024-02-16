@@ -10,6 +10,7 @@ class States(PyEnum):
     COMPLETE = "Complete"
     ON_HOLD = "On hold"
     CANCELLED = "Cancelled"
+    ERROR = "Error"
 
 class Task(Base):
     __tablename__ = 'task_library'
