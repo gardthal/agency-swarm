@@ -32,7 +32,7 @@ class Task(Base):
     tags = Column(JSON)  # Storing tags as JSON
     thread_id = Column(String)
 
-    def __init__(self, description: str, priority: int, thread_id: str = None, assigned_agent: str = None,
+    def __init__(self, description: str, priority: int = 1, thread_id: str = None, assigned_agent: str = None, task_id: int = None,
                  files: List[str] = None, tags: List[str] = None, state: States = States.AVAILABLE):
         """
         Initialize a new Task instance.

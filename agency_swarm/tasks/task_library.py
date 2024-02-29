@@ -1,11 +1,15 @@
 from sqlalchemy import create_engine, or_
 from sqlalchemy.orm import scoped_session, sessionmaker, joinedload, make_transient
-from task import Task, Base, States
+from .task import Task, States, Base
+import threading
 
 class TaskLibrary:
     """
     A class for managing a library of tasks using an SQLAlchemy database.
     """
+
+    # Define a thread-local storage for TaskLibrary instances
+    _local = threading.local()
 
     def __init__(self, db_url='sqlite:///task_library.db'):
         """
@@ -13,11 +17,28 @@ class TaskLibrary:
 
         :param db_url: str, the database URL for SQLAlchemy to connect to.
         """
-        self.engine = create_engine(db_url)
-        Base.metadata.create_all(self.engine)
-        self.session_factory = sessionmaker(bind=self.engine)
-        self.Session = scoped_session(self.session_factory)
+        # Check if a TaskLibrary instance already exists for this thread
+        if not hasattr(TaskLibrary._local, 'library'):
+            # If not, create a new one and store it in thread-local storage
+            TaskLibrary._local.library = self
 
+            # Initialize database connection
+            self.engine = create_engine(db_url)
+            Base.metadata.create_all(self.engine)
+            self.session_factory = sessionmaker(bind=self.engine)
+            self.Session = scoped_session(self.session_factory)
+        else:
+            print("task library already created for this thread")
+
+    @classmethod
+    def get_current(cls):
+        """
+        Get the TaskLibrary instance associated with the current thread.
+
+        :return: TaskLibrary instance or None if not found.
+        """
+        return getattr(TaskLibrary._local, 'library', None)
+    
     def print_library(self):
         """
         Print all tasks in the library with their attributes in a readable format.

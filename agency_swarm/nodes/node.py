@@ -1,7 +1,7 @@
 import threading
 import uuid
 from typing import Callable, Any
-from message_bus import MessageBus  # Ensure you have the MessageBus class defined as previously discussed
+from .message_bus import MessageBus  # Ensure you have the MessageBus class defined as previously discussed
 
 class Node:
     """

@@ -1,6 +1,6 @@
-from node import Node
-from tasks import TaskLibrary, Task, States
-from agency import Agency
+from .node import Node
+from agency_swarm.tasks import TaskLibrary, Task, States
+from agency_swarm.agency import Agency
 import time
 
 class AgencyNode(Node):
@@ -17,7 +17,7 @@ class AgencyNode(Node):
         :param custom_tools: List, optional custom tools to be added to the agency's CEO.
         """
         self.agency = agency
-        self.task_library = TaskLibrary()
+        self.task_library = TaskLibrary(db_url='sqlite:///task_library.db')
 
         if custom_tools is not None:
             self._add_custom_tools_to_ceo(custom_tools)
