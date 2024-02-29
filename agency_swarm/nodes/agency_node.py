@@ -1,6 +1,7 @@
 from .node import Node
 from agency_swarm.tasks import TaskLibrary, Task, States
 from agency_swarm.agency import Agency
+from agency_swarm.tools.tasktools import ChangeTaskState
 import time
 
 class AgencyNode(Node):
@@ -18,6 +19,7 @@ class AgencyNode(Node):
         """
         self.agency = agency
         self.task_library = TaskLibrary(db_url='sqlite:///task_library.db')
+        self.agency.ceo.add_tool(ChangeTaskState)
 
         if custom_tools is not None:
             self._add_custom_tools_to_ceo(custom_tools)

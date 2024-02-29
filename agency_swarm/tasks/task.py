@@ -73,7 +73,7 @@ class Task(Base):
         prompt_parts = [
             f"Task ID: {self.task_id}",
             f"Description: {self.description}",
-            f"Priority: {self.priority}",
+            #f"Priority: {self.priority}",
             f"State: {self.state}",
             f"Files: {', '.join(self.files) if self.files else 'None'}"
         ]
