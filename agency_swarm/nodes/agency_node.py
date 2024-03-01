@@ -47,14 +47,15 @@ class AgencyNode(Node):
         self.task_library.add_task(task)
 
         # Complete Task
-        self.agency.get_completion(task.format_for_ai())
+        print(self.agency.get_completion(task.format_for_ai()))
 
         # Check Task State
         if task.state == States.IN_PROGRESS:
-            self.agency.get_completion("Please change the state of the task based on your execution success")
+            print("Failed to change state")
 
             if task.state == States.IN_PROGRESS:
                 task.state = States.ERROR
+                self.task_library.add_task(task)
 
     def _add_custom_tools_to_ceo(self, custom_tools):
         """
