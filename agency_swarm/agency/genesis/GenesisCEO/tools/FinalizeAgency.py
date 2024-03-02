@@ -52,9 +52,9 @@ Only output the full valid python code and nothing else."""
 example_input = """
 from agency_swarm import Agency
 
-from BasicInformationCurator import BasicInformationCurator
-from BasicTaskExecutor import BasicTaskExecutor
-from BasicCEO import BasicCEO
+from .BasicInformationCurator import BasicInformationCurator
+from .BasicTaskExecutor import BasicTaskExecutor
+from .BasicCEO import BasicCEO
 
 class BasicAgency(Agency):
     def __init__(self, **kwargs):
@@ -77,9 +77,9 @@ if __name__ == '__main__':
 
 example_output = """
 from agency_swarm import Agency
-from BasicInformationCurator import BasicInformationCurator
-from BasicTaskExecutor import BasicTaskExecutor
-from BasicCEO import BasicCEO
+from .BasicInformationCurator import BasicInformationCurator
+from .BasicTaskExecutor import BasicTaskExecutor
+from .BasicCEO import BasicCEO
 
 class BasicAgency(Agency):
     def __init__(self, **kwargs):

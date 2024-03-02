@@ -56,14 +56,7 @@ class CreateAgencyFolder(BaseTool):
 
         # create init file
         with open("__init__.py", "w") as f:
-            f.write("")
-
-        # create agency.py
-        #with open("agency.py", "w") as f:
-        #    f.write("from agency_swarm import Agency\n\n\n")
-        #    f.write(f"agency = Agency({agency_chart},\nshared_instructions='./agency_manifesto.md')\n\n")
-        #    f.write("if __name__ == '__main__':\n")
-        #    f.write("    agency.demo_gradio()\n")
+            f.write(f"from .agency import {self.agency_name}\n")
 
         with open("agency.py", "w") as f:
             f.write("from agency_swarm import Agency\n\n\n")

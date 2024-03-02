@@ -3,6 +3,8 @@ from agency_swarm.tasks import TaskLibrary, Task, States
 from agency_swarm.agency import Agency
 from agency_swarm.tools.tasktools import ChangeTaskState
 import time
+import os
+import inspect
 
 class AgencyNode(Node):
     """
@@ -18,11 +20,17 @@ class AgencyNode(Node):
         :param custom_tools: List, optional custom tools to be added to the agency's CEO.
         """
         self.agency = agency
-        self.task_library = TaskLibrary(db_url='sqlite:///task_library.db')
-        self.agency.ceo.add_tool(ChangeTaskState)
 
-        if custom_tools is not None:
-            self._add_custom_tools_to_ceo(custom_tools)
+        # Get the directory of the calling script 
+        calling_frame = inspect.stack()[1]
+        calling_module = inspect.getmodule(calling_frame[0])
+        calling_script_dir = os.path.dirname(calling_module.__file__)
+
+        # Construct the path for the database file
+        db_path = os.path.join(calling_script_dir, 'task_library.db')
+
+        self.task_library = TaskLibrary(db_url=f'sqlite:///{db_path}')
+        self.agency.ceo.add_tool(ChangeTaskState)
 
     def _run(self):
         """
