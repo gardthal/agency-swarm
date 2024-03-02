@@ -59,11 +59,24 @@ class CreateAgencyFolder(BaseTool):
             f.write("")
 
         # create agency.py
+        #with open("agency.py", "w") as f:
+        #    f.write("from agency_swarm import Agency\n\n\n")
+        #    f.write(f"agency = Agency({agency_chart},\nshared_instructions='./agency_manifesto.md')\n\n")
+        #    f.write("if __name__ == '__main__':\n")
+        #    f.write("    agency.demo_gradio()\n")
+
         with open("agency.py", "w") as f:
             f.write("from agency_swarm import Agency\n\n\n")
-            f.write(f"agency = Agency({agency_chart},\nshared_instructions='./agency_manifesto.md')\n\n")
-            f.write("if __name__ == '__main__':\n")
-            f.write("    agency.demo_gradio()\n")
+            f.write(f"class {self.agency_name}(Agency):\n")
+            f.write("    def __init__(self, **kwargs):\n\n")
+            f.write("        if 'agency_chart' not in kwargs:\n")
+            f.write(f"            kwargs['agency_chart'] = {agency_chart}\n")
+            f.write("        if 'shared_instructions' not in kwargs:\n")
+            f.write("            kwargs['shared_instructions'] = './agency_manifesto.md'\n\n")
+            f.write("        super().__init__(**kwargs)\n\n")
+            f.write("    if __name__ == '__main__':\n")
+            f.write(f"        agency = {self.agency_name}()\n")
+            f.write("        agency.demo_gradio()\n")
 
         # write manifesto
         path = os.path.join("agency_manifesto.md")

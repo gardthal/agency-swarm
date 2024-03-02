@@ -52,35 +52,55 @@ Only output the full valid python code and nothing else."""
 example_input = """
 from agency_swarm import Agency
 
-from CEO import CEO
-from NewsAnalysisAgent import NewsAnalysisAgent
-from PriceTrackingAgent import PriceTrackingAgent
+from BasicInformationCurator import BasicInformationCurator
+from BasicTaskExecutor import BasicTaskExecutor
+from BasicCEO import BasicCEO
 
+class BasicAgency(Agency):
+    def __init__(self, **kwargs):
+    
+        if 'agency_chart' not in kwargs:
+            kwargs['agency_chart'] = [
+                ceo,
+                [ceo, taskExecutor],
+                [ceo, infoCurator],
+            ]
+        if 'shared_instructions' not in kwargs:
+            kwargs['shared_instructions'] = "./manifesto.md"
 
-agency = Agency([ceo, [ceo, news_analysis],
- [ceo, price_tracking],
- [news_analysis, price_tracking]],
-shared_instructions='./agency_manifesto.md')
+        super().__init__(**kwargs)
 
 if __name__ == '__main__':
+    agency = BasicAgency()
     agency.demo_gradio()
 """
 
-example_output = """from agency_swarm import Agency
-from CEO import CEO
-from NewsAnalysisAgent import NewsAnalysisAgent
-from PriceTrackingAgent import PriceTrackingAgent
+example_output = """
+from agency_swarm import Agency
+from BasicInformationCurator import BasicInformationCurator
+from BasicTaskExecutor import BasicTaskExecutor
+from BasicCEO import BasicCEO
 
-ceo = CEO()
-news_analysis = NewsAnalysisAgent()
-price_tracking = PriceTrackingAgent()
+class BasicAgency(Agency):
+    def __init__(self, **kwargs):
 
-agency = Agency([ceo, [ceo, market_analyst],
-                 [ceo, news_curator],
-                 [market_analyst, news_curator]],
-                shared_instructions='./agency_manifesto.md')
-    
+        if 'agency_chart' not in kwargs:
+            ceo = BasicCEO()
+            taskExecutor = BasicTaskExecutor()
+            infoCurator = BasicInformationCurator()
+            
+            kwargs['agency_chart'] = [
+                ceo,
+                [ceo, taskExecutor],
+                [ceo, infoCurator],
+            ]
+        if 'shared_instructions' not in kwargs:
+            kwargs['shared_instructions'] = "./manifesto.md"
+
+        super().__init__(**kwargs)
+
 if __name__ == '__main__':
+    agency = BasicAgency()
     agency.demo_gradio()"""
 
 examples = [
