@@ -1,10 +1,12 @@
-from .node import Node
+from agency_swarm.nodes.node import Node
 from agency_swarm.tasks import TaskLibrary, Task, States
 from agency_swarm.agency import Agency
 from agency_swarm.tools.tasktools import ChangeTaskState
 import time
 import os
 import inspect
+import threading
+import concurrent.futures
 
 class AgencyNode(Node):
     """
@@ -12,14 +14,14 @@ class AgencyNode(Node):
     This class is responsible for managing tasks and executing them within an agency context.
     """
 
-    def __init__(self, agency: Agency, custom_tools=None):
+    def __init__(self, agency: Agency, **kwargs):
         """
         Initialize a new AgencyNode instance.
 
         :param agency: Agency, the agency associated with this node.
-        :param custom_tools: List, optional custom tools to be added to the agency's CEO.
         """
         self.agency = agency
+        super().__init__(**kwargs)
 
         # Get the directory of the calling script 
         calling_frame = inspect.stack()[1]
@@ -29,19 +31,48 @@ class AgencyNode(Node):
         # Construct the path for the database file
         db_path = os.path.join(calling_script_dir, 'task_library.db')
 
+        # Initialize the task library
         self.task_library = TaskLibrary(db_url=f'sqlite:///{db_path}')
+        
+        #Add ceo tools for tasks and task library
         self.agency.ceo.add_tool(ChangeTaskState)
 
-    def _run(self):
+        #Create new topic
+        curr_instance = self.__class__.__name__
+        self.create_topic(curr_instance, f"Publish requests to add tasks to {curr_instance} task library")
+
+        self.subscribe(f"{curr_instance}", self.add_task)
+
+    def add_task(self, message):
+        pass
+
+    #REEVALUATE!
+    def run(self, num_workers=5):
         """
         Main loop where the AgencyNode checks for new tasks and executes them.
+        
+        :param num_workers: int, number of worker threads to use.
         """
-        while self._running:
-            next_task = self.task_library.next_task()
-            if next_task:
-                self._execute_task(next_task)
-            else:
-                time.sleep(1)
+        with concurrent.futures.ThreadPoolExecutor(max_workers=num_workers) as executor:
+            while self._running:
+                # Retrieve multiple tasks if available
+                next_tasks = self.task_library.next_tasks()
+
+                # Check if there are tasks to execute
+                if next_tasks:
+                    # Submit tasks to the thread pool
+                    future_to_task = {executor.submit(self._execute_task, task): task for task in next_tasks}
+                    
+                    # Wait for all tasks to complete
+                    for future in concurrent.futures.as_completed(future_to_task):
+                        task = future_to_task[future]
+                        try:
+                            future.result()  # Retrieve the result to check for any exceptions
+                        except Exception as e:
+                            print(f"Task execution failed: {e}")
+
+                else:
+                    time.sleep(10)
 
     def _execute_task(self, task: Task):
         """
@@ -64,15 +95,6 @@ class AgencyNode(Node):
             if task.state == States.IN_PROGRESS:
                 task.state = States.ERROR
                 self.task_library.add_task(task)
-
-    def _add_custom_tools_to_ceo(self, custom_tools):
-        """
-        Add custom tools to the agency's CEO.
-
-        :param custom_tools: List, custom tools to be added.
-        """
-        for tool in custom_tools:
-            self.agency.ceo.add_tool(tool)
 
     def __repr__(self):
         """
