@@ -1,7 +1,6 @@
 from agency_swarm.nodes.node import Node
 from agency_swarm.tasks import TaskLibrary, Task, States
 from agency_swarm.agency import Agency
-from agency_swarm.tools.tasktools import ChangeTaskState
 import time
 import os
 import inspect
@@ -35,7 +34,7 @@ class AgencyNode(Node):
         self.task_library = TaskLibrary(db_url=f'sqlite:///{db_path}')
         
         #Add ceo tools for tasks and task library
-        self.agency.ceo.add_tool(ChangeTaskState)
+        self.task_library._create_change_task_state_tool(self.agency.ceo)
 
         #Create new topic
         curr_instance = self.__class__.__name__

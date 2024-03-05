@@ -2,7 +2,8 @@ from sqlalchemy import create_engine, or_
 from sqlalchemy.orm import scoped_session, sessionmaker, joinedload, make_transient
 from .task import Task, States, Base
 import threading
-
+from agency_swarm import BaseTool, Agent
+from pydantic import Field
 class TaskLibrary:
     """
     A class for managing a library of tasks using an SQLAlchemy database.
@@ -17,27 +18,11 @@ class TaskLibrary:
 
         :param db_url: str, the database URL for SQLAlchemy to connect to.
         """
-        # Check if a TaskLibrary instance already exists for this thread
-        if not hasattr(TaskLibrary._local, 'library'):
-            # If not, create a new one and store it in thread-local storage
-            TaskLibrary._local.library = self
-
-            # Initialize database connection
-            self.engine = create_engine(db_url)
-            Base.metadata.create_all(self.engine)
-            self.session_factory = sessionmaker(bind=self.engine)
-            self.Session = scoped_session(self.session_factory)
-        else:
-            print("task library already created for this thread")
-
-    @classmethod
-    def get_current(cls):
-        """
-        Get the TaskLibrary instance associated with the current thread.
-
-        :return: TaskLibrary instance or None if not found.
-        """
-        return getattr(TaskLibrary._local, 'library', None)
+        # Initialize database connection
+        self.engine = create_engine(db_url)
+        Base.metadata.create_all(self.engine)
+        self.session_factory = sessionmaker(bind=self.engine)
+        self.Session = scoped_session(self.session_factory)
     
     def print_library(self):
         """
@@ -146,3 +131,40 @@ class TaskLibrary:
                 print(f"Task ID {task.task_id} deleted.")
             else:
                 print(f"Task ID {task.task_id} not found in the library.")
+
+    def _create_change_task_state_tool(self, ceo: Agent):
+        class ChangeTaskState(BaseTool):
+            """
+            This tool changes state of a task to one of the following: IN_PROGRESS, AVAILABLE, COMPLETE, ON_HOLD, CANCELLED, or ERROR.
+            """
+            state: States = Field(
+            ..., description="Desired state of the task.",
+                examples=[States.IN_PROGRESS, States.AVAILABLE, States.COMPLETE, States.ON_HOLD, States.CANCELLED, States.ERROR]
+            )
+
+            task_id: int = Field(
+                ..., description="ID of the task.",
+                examples=[1,2,3,4,5]
+            )
+
+            def run(self):
+                task_library = self
+
+                if task_library:
+                    # Use the task_library object as needed
+                    task = task_library.query_tasks(filters={'task_id': self.task_id})[0]
+                    
+                    if task:
+                        task.state = self.state
+                        task_library.add_task(task)
+                    else:
+                        return "Task id not correct. Task not not found"
+
+                else:
+                    return "No task library has been initialized on this thread. Halt Execution"
+
+                return f"Task state has been changed to {self.state}."
+        
+        ceo.add_tool(ChangeTaskState)
+
+        return None
