@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, String, Enum, JSON
 from sqlalchemy.ext.declarative import declarative_base
 from enum import Enum as PyEnum
-from typing import List
+from typing import Dict, List
 
 Base = declarative_base()
 
@@ -15,6 +15,18 @@ class States(PyEnum):
     ON_HOLD = "On hold"
     CANCELLED = "Cancelled"
     ERROR = "Error"
+
+class Tags(PyEnum):
+    """
+    Enum representing the possible tags of a task.
+    """
+    AWAITING_APPROVAL = "Awaiting Approval"
+    APPROVED = "Approved"
+    DENIED = "Denied"
+    AWAITING_INFORMATION = "Awaiting Information"
+    EXECUTE_TIME = "Execute Time"
+    RECURRING = "Recurring"
+    RESUME = "Resume"
 
 class Task(Base):
     """
@@ -33,7 +45,7 @@ class Task(Base):
     thread_id = Column(String)
 
     def __init__(self, description: str, priority: int = 1, thread_id: str = None, assigned_agent: str = None, task_id: int = None,
-                 files: List[str] = None, tags: List[str] = None, state: States = States.AVAILABLE):
+                 files: List[str] = None, tags: Dict[Tags, str] = None, state: States = States.AVAILABLE):
         """
         Initialize a new Task instance.
 
@@ -42,7 +54,7 @@ class Task(Base):
         :param thread_id: str, ID of the associated thread (optional)
         :param assigned_agent: str, agent assigned to the task (optional)
         :param files: List[str], list of files associated with the task (optional)
-        :param tags: List[str], list of tags associated with the task (optional)
+        :param tags: Dict[Tags, str], dictionary of tags associated with the task (optional)
         :param state: States, state of the task (default: AVAILABLE)
         :raises ValueError: If priority is not a positive integer
         :raises TypeError: If files or tags are not lists
@@ -53,15 +65,15 @@ class Task(Base):
         if files is not None and not isinstance(files, list):
             raise TypeError("Files must be a list.")
 
-        if tags is not None and not isinstance(tags, list):
-            raise TypeError("Tags must be a list.")
+        if tags is not None and not isinstance(tags, dict):
+            raise TypeError("Tags must be a dictionary.")
 
         self.description = description
         self.priority = priority
         self.thread_id = thread_id
         self.assigned_agent = assigned_agent
         self.files = files or []
-        self.tags = tags or []
+        self.tags = tags or {}
         self.state = state if isinstance(state, States) else States.AVAILABLE
 
     def format_for_ai(self) -> str:

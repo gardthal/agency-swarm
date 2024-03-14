@@ -1,9 +1,11 @@
 from sqlalchemy import create_engine, or_
 from sqlalchemy.orm import scoped_session, sessionmaker, joinedload, make_transient
-from .task import Task, States, Base
+from .task import Task, States, Tags, Base  # Assuming Tags enum is imported
 import threading
 from agency_swarm import BaseTool, Agent
 from pydantic import Field
+from typing import Dict, Optional
+
 class TaskLibrary:
     """
     A class for managing a library of tasks using an SQLAlchemy database.
@@ -42,7 +44,7 @@ class TaskLibrary:
                 print(f"  State: {task.state.name}")
                 print(f"  Assigned Agent: {task.assigned_agent or 'None'}")
                 print(f"  Files: {', '.join(task.files) if task.files else 'None'}")
-                print(f"  Tags: {', '.join(task.tags) if task.tags else 'None'}")
+                print(f"  Tags: {', '.join(task.tags.values()) if task.tags else 'None'}")
                 print(f"  Thread ID: {task.thread_id or 'None'}")
 
     def add_task(self, task: Task):
@@ -136,6 +138,13 @@ class TaskLibrary:
         class ChangeTaskState(BaseTool):
             """
             This tool changes state of a task to one of the following: IN_PROGRESS, AVAILABLE, COMPLETE, ON_HOLD, CANCELLED, or ERROR.
+            
+            If the state is changed to or from the ON_HOLD state, also modify the tags appropriately depending on the reason for the hold. 
+            Use tags to help describe what is going on with a task and what stage it is in. Use tags as context for a task.
+            
+            If a task is changed from ON_HOLD to Avialable, and the tag was "AWAITING_APPROVAL", 
+            remove it and replace it with "APPROVED". If a task needs manual approval, change the state to ON_HOLD, 
+            add the tag "AWAITING_APPROVAL".
             """
             state: States = Field(
             ..., description="Desired state of the task.",
@@ -147,6 +156,11 @@ class TaskLibrary:
                 examples=[1,2,3,4,5]
             )
 
+            tags: Optional[Dict[Tags, str]] = Field(
+                ..., description="Tags for the task.",
+                examples=[{Tags.AWAITING_APPROVAL:None}, {Tags.AWAITING_INFORMATION:"What is the current date?"}, {Tags.APPROVED,None}, {Tags.DENIED,None}, {Tags.RESUME,None}]
+            )
+
             def run(self):
                 task_library = self
 
@@ -156,6 +170,7 @@ class TaskLibrary:
                     
                     if task:
                         task.state = self.state
+                        task.tags = self.tags
                         task_library.add_task(task)
                     else:
                         return "Task id not correct. Task not not found"

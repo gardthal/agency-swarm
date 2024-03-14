@@ -2,6 +2,8 @@ import threading
 import uuid
 from typing import Callable, Any, List, Tuple
 from .message_bus import MessageBus
+from agency_swarm import BaseTool, Agent
+from pydantic import Field
 
 class Node:
     """
@@ -139,3 +141,17 @@ class Node:
         String representation of the Node instance.
         """
         return f"<{self.__class__.__name__} id={self._id}>"
+    
+    def _create_get_topics_tool(self, agent: Agent):
+        class get_topics_tool(BaseTool):
+            """
+            This tool gets the available topics to subscribe to. returns a dictionary of topic names and descriptions
+            """
+            def run(self):
+
+                return Node.get_topics()
+        
+        agent.add_tool(get_topics_tool)
+
+        return None
+
